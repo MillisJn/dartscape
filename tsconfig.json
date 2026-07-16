@@ -10,29 +10,7 @@
     "moduleSuffixes": [".native", ".web", ""],
     "paths": {
       "@spatch-kit/*": ["../spatch-kit/*"],
-      "@/*": ["./src/*"],
-      // spatch-kit lives outside this project (../spatch-kit), so tsc's normal upward node_modules
-      // (and companion @types) search never reaches this app's node_modules from a kit file. Map
-      // exactly spatch-kit's own ALLOWED_PACKAGES manifest (kitBoundary.test.ts) here rather than a
-      // blanket "*" fallback — a wildcard also redirects unrelated packages (vitest, zustand, ...)
-      // through paths-based resolution, which can silently land on an incomplete .d.ts for a package
-      // whose types are resolved via package.json "exports"/"typesVersions" instead of a plain index.
-      "react": ["./node_modules/@types/react"],
-      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
-      "react/jsx-dev-runtime": ["./node_modules/@types/react/jsx-dev-runtime"],
-      "react-dom": ["./node_modules/react-dom"],
-      "react-native": ["./node_modules/react-native"],
-      "nativewind": ["./node_modules/nativewind"],
-      "react-native-reanimated": ["./node_modules/react-native-reanimated"],
-      "react-native-safe-area-context": ["./node_modules/react-native-safe-area-context"],
-      "react-native-gesture-handler": ["./node_modules/react-native-gesture-handler"],
-      "react-native-svg": ["./node_modules/react-native-svg"],
-      "@gorhom/portal": ["./node_modules/@gorhom/portal"],
-      "@react-native-async-storage/async-storage": ["./node_modules/@react-native-async-storage/async-storage"],
-      "lucide-react-native": ["./node_modules/lucide-react-native"],
-      "expo-linear-gradient": ["./node_modules/expo-linear-gradient"],
-      "expo-image-manipulator": ["./node_modules/expo-image-manipulator"],
-      "expo-router/react-navigation": ["./node_modules/expo-router/react-navigation"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
