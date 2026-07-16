@@ -7,6 +7,7 @@ import { useOverlayRegistration } from "@spatch-kit/ui/overlays/core/dismissal";
 import { AppIcon, type IconName } from "@spatch-kit/ui/primitives/AppIcon";
 import { AppModal } from "@spatch-kit/ui/primitives/AppModal";
 import { AppText } from "@spatch-kit/ui/primitives/AppText";
+import { Avatar } from "@spatch-kit/ui/primitives/Avatar";
 import { DropdownSurface } from "@spatch-kit/ui/primitives/DropdownSurface";
 import { PressableTint } from "@spatch-kit/ui/primitives/pressFeedback";
 import { PopupSurface } from "@spatch-kit/ui/primitives/PopupSurface";
@@ -15,6 +16,10 @@ import { TextField } from "@spatch-kit/ui/primitives/TextField";
 export type SelectOption = {
   // Optional glyph shown at the start of the option row.
   icon?: IconName;
+  // Optional avatar (photo or initials, via the Avatar primitive) shown at the start of the row
+  // instead of `icon` — for pickers over people (e.g. the saved-player list) rather than plain
+  // values. `label` is used as the initials source.
+  avatarUri?: string | null;
   label: string;
   value: string;
 };
@@ -190,7 +195,9 @@ export function SelectPopup({
               }
             >
               <View className="flex-1 flex-row items-center gap-app-md">
-                {item.icon ? (
+                {item.avatarUri !== undefined ? (
+                  <Avatar avatarUri={item.avatarUri} name={item.label} size={28} />
+                ) : item.icon ? (
                   <AppIcon
                     color={isSelected ? theme.colors.accent : theme.colors.text}
                     name={item.icon}

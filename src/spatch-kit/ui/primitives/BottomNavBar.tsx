@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Platform, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@spatch-kit/theme/provider";
 import { AppIcon, type IconName } from "@spatch-kit/ui/primitives/AppIcon";
@@ -148,6 +149,7 @@ export function BottomNavBar({
   centerSlotWidth?: number;
 }) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const [barWidth, setBarWidth] = useState(0);
 
   const activeIndex = Math.max(
@@ -171,7 +173,9 @@ export function BottomNavBar({
       : activeIndex * itemWidth + centerSlotWidth;
 
   return (
-    <View className="relative">
+    // This bar is always the true bottom edge of whatever screen renders it, so it owns the
+    // safe-area clearance itself — otherwise Android's edge-to-edge gesture bar sits over the tabs.
+    <View className="relative" style={{ paddingBottom: insets.bottom }}>
       {/* Top border drawn as an explicit line so a caller can paint an opaque element (the shell's
           raised create button) over it where it straddles the bar's top edge. */}
       <View

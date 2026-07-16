@@ -105,7 +105,7 @@ export function PlayerList({ players, onChange }: PlayerListProps) {
 
   const options: SelectOption[] = savedPlayers
     .filter((saved) => !players.some((p) => p.name === saved.name))
-    .map((saved) => ({ label: saved.name, value: saved.name }));
+    .map((saved) => ({ avatarUri: null, label: saved.name, value: saved.name }));
 
   return (
     <ListSectionShell title={`PLAYERS ${players.length}`}>
