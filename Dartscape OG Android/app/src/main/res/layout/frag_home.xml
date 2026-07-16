@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/FragDefault"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="0dp">
+
+    <ScrollView
+        android:id="@+id/svHomeScrollMain"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/naviBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:splitMotionEvents="false">
+
+            <LinearLayout
+                android:id="@+id/lHomeGameSessionSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="8dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="16dp">
+
+                <com.gworks.dartscape.ui.MultiView
+                    android:id="@+id/mvHomeGameLabel4"
+                    style="@style/MultiViewLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:paddingBottom="8dp"
+                    android:text="@string/game_mode" />
+
+                <LinearLayout
+                    android:id="@+id/lHomeGameType"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="@dimen/control_padding"
+                    android:splitMotionEvents="false">
+
+                    <view
+                        android:id="@+id/spinHomeGame"
+                        style="@style/SpinnerDefault"
+                        class="com.gworks.dartscape.ui.SuperSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        tools:ignore="DuplicateSpeakableTextCheck"
+                        tools:listitem="@layout/item_spinner" />
+
+                    <Space
+                        android:id="@+id/spaceHome1"
+                        android:layout_width="8dp"
+                        android:layout_height="match_parent" />
+
+                    <view
+                        android:id="@+id/spinHomeGameMode"
+                        style="@style/SpinnerDefault"
+                        class="com.gworks.dartscape.ui.SuperSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        tools:ignore="DuplicateSpeakableTextCheck"
+                        tools:listitem="@layout/item_spinner" />
+
+                </LinearLayout>
+
+                <com.gworks.dartscape.ui.MultiView
+                    android:id="@+id/mvHomeGameLabel2"
+                    style="@style/MultiViewLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:paddingBottom="4dp"
+                    android:text="@string/game_options" />
+
+                <LinearLayout
+                    android:id="@+id/lHomeVariant"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="@dimen/control_padding"
+                    android:splitMotionEvents="false">
+
+                    <view
+                        android:id="@+id/spinHomeGameVariant"
+                        style="@style/SpinnerDefault"
+                        class="com.gworks.dartscape.ui.SuperSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        tools:ignore="DuplicateSpeakableTextCheck"
+                        tools:listitem="@layout/item_spinner" />
+
+                    <Space
+                        android:id="@+id/spaceHome2"
+                        android:layout_width="8dp"
+                        android:layout_height="match_parent" />
+
+                    <view
+                        android:id="@+id/spinHomeGameVariant2"
+                        style="@style/SpinnerDefault"
+                        class="com.gworks.dartscape.ui.SuperSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        tools:listitem="@layout/item_spinner" />
+
+                </LinearLayout>
+
+                <com.gworks.dartscape.ui.MultiView
+                    android:id="@+id/mvHomeGameLabel"
+                    style="@style/MultiViewLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:paddingBottom="4dp"
+                    android:text="@string/legs_sets" />
+
+                <LinearLayout
+                    android:id="@+id/lHomeLegs"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="@dimen/control_padding"
+                    android:splitMotionEvents="false">
+
+                    <view
+                        android:id="@+id/spinHomeLegs"
+                        style="@style/SpinnerDefault"
+                        class="com.gworks.dartscape.ui.SuperSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        tools:ignore="DuplicateSpeakableTextCheck"
+                        tools:listitem="@layout/item_spinner" />
+
+                    <Space
+                        android:id="@+id/spaceHomeLegsSets"
+                        android:layout_width="8dp"
+                        android:layout_height="match_parent" />
+
+                    <view
+                        android:id="@+id/spinHomeSets"
+                        style="@style/SpinnerDefault"
+                        class="com.gworks.dartscape.ui.SuperSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        tools:ignore="DuplicateSpeakableTextCheck"
+                        tools:listitem="@layout/item_spinner" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <com.gworks.dartscape.ui.MultiView
+                android:id="@+id/multiView9"
+                style="@style/MultiViewHeader"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:padding="0dp" />
+
+            <LinearLayout
+                android:id="@+id/lHomePlayers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:splitMotionEvents="false">
+
+                <com.gworks.dartscape.ui.MultiView
+                    android:id="@+id/mvHomePlayersLabel"
+                    style="@style/MultiViewLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:paddingBottom="4dp"
+                    android:text="@string/players" />
+
+                <LinearLayout
+                    android:id="@+id/lHomeAddPlayerType"
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <view
+                        android:id="@+id/btnHomeNewTeam"
+                        style="@style/MultiViewDefault"
+                        class="com.gworks.dartscape.ui.MultiView"
+                        android:layout_width="80dp"
+                        android:layout_height="match_parent"
+                        android:gravity="bottom"
+                        android:text="@string/team"
+                        custom:icon1="@drawable/ic_users_add" />
+
+                    <Space
+                        android:layout_width="16dp"
+                        android:layout_height="match_parent" />
+
+                    <view
+                        android:id="@+id/btnHomeNewPlayer"
+                        style="@style/MultiViewDefault"
+                        class="com.gworks.dartscape.ui.MultiView"
+                        android:layout_width="80dp"
+                        android:layout_height="match_parent"
+                        android:gravity="bottom"
+                        android:text="@string/player"
+                        custom:icon1="@drawable/ic_user_add" />
+
+                    <Space
+                        android:layout_width="16dp"
+                        android:layout_height="match_parent" />
+
+                    <view
+                        android:id="@+id/btnHomeNewBot"
+                        style="@style/MultiViewDefault"
+                        class="com.gworks.dartscape.ui.MultiView"
+                        android:layout_width="80dp"
+                        android:layout_height="match_parent"
+                        android:gravity="bottom"
+                        android:text="@string/bot"
+                        app:icon1="@drawable/ic_bot_add" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:orientation="horizontal"></LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/naviBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        custom:layout_constraintEnd_toEndOf="parent"
+        custom:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:background="?attr/colorAccent"
+            android:orientation="horizontal"></LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/lHomeGameStartBottom"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/frag_padding"
+            android:paddingTop="8dp"
+            android:paddingEnd="@dimen/frag_padding"
+            android:paddingBottom="8dp"
+            android:splitMotionEvents="false">
+
+            <com.gworks.dartscape.ui.MultiView
+                android:id="@+id/btnHomeReturnToGame"
+                style="@style/MultiViewDefault"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/return_to_game"
+                app:textSizeRatio="1" />
+
+            <Space
+                android:id="@+id/spaceHomeReturnStart"
+                android:layout_width="8dp"
+                android:layout_height="match_parent" />
+
+            <com.gworks.dartscape.ui.MultiView
+                android:id="@+id/btnHomeStartGame"
+                style="@style/MultiViewDefault"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/start_game"
+                app:textSizeRatio="1" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="?attr/colorButtonNormal"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <view
+                android:id="@+id/btnHomePlayers"
+                style="@style/MultiViewTransparent"
+                class="com.gworks.dartscape.ui.MultiView"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom"
+                android:paddingBottom="@dimen/control_padding"
+                android:text="@string/players"
+                custom:icon1="@drawable/ic_users_trio"
+                tools:ignore="DuplicateSpeakableTextCheck" />
+
+            <view
+                android:id="@+id/btnHomeStats"
+                style="@style/MultiViewTransparent"
+                class="com.gworks.dartscape.ui.MultiView"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom"
+                android:paddingBottom="@dimen/control_padding"
+                android:text="@string/stats"
+                custom:icon1="@drawable/ic_stats" />
+
+            <view
+                android:id="@+id/btnHomeSettings"
+                style="@style/MultiViewTransparent"
+                class="com.gworks.dartscape.ui.MultiView"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom"
+                android:paddingBottom="@dimen/control_padding"
+                android:text="@string/settings"
+                custom:icon1="@drawable/ic_settings" />
+
+            <view
+                android:id="@+id/btnHomeHelp"
+                style="@style/MultiViewTransparent"
+                class="com.gworks.dartscape.ui.MultiView"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom"
+                android:paddingBottom="@dimen/control_padding"
+                android:text="@string/help"
+                custom:icon1="@drawable/ic_help" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

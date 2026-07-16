@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/drw_primary_bg"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".1"
+        android:orientation="vertical"
+        android:padding="@dimen/control_padding">
+
+        <com.gworks.dartscape.ui.SuperSpinner
+            android:id="@+id/spinHelpChapters"
+            style="@style/SpinnerDefault"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight=".1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?attr/colorAccent"
+        android:orientation="horizontal" />
+
+    <ScrollView
+        android:id="@+id/svHelp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".9"
+        android:fadeScrollbars="true"
+        android:fillViewport="false"
+        android:scrollbarAlwaysDrawHorizontalTrack="true"
+        android:scrollbarSize="2dp"
+        android:scrollbarThumbVertical="@drawable/drw_scroll_thumb"
+        android:scrollbars="vertical">
+
+        <ViewStub
+            android:id="@+id/stubHelpContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout="@layout/help_content" />
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?attr/colorAccent"
+        android:orientation="horizontal" />
+
+    <LinearLayout
+        android:id="@+id/lBtnHelpGotIt"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".1"
+        android:orientation="vertical"
+        android:padding="@dimen/control_padding">
+
+        <com.gworks.dartscape.ui.MultiView
+            android:id="@+id/btnHelpGotIt"
+            style="@style/MultiViewDefault"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="OK GOT IT!" />
+    </LinearLayout>
+
+</LinearLayout>
