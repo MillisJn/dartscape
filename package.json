@@ -56,7 +56,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "sim": "vite-node scripts/sim.ts --",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "lint": "biome check src",
     "format": "biome check --write src",
     "check": "npm run typecheck && npm run lint && npm test",
