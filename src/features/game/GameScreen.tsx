@@ -45,6 +45,8 @@ export function GameScreen() {
   const checkoutHintsEnabled = useSettingsStore((s) => s.checkoutHintsEnabled);
 
   const [finishedLeg, setFinishedLeg] = useState<FinishedLeg | null>(null);
+  /** Measured height of the panel region — cricket fills it (see the render below). */
+  const [panelHeight, setPanelHeight] = useState(0);
 
   const onWon = useCallback((winnerSeat: number) => {
     // Read fresh: the log at the moment of the winning dart, not whatever was closed over when
@@ -151,21 +153,49 @@ export function GameScreen() {
         <GameTitleBar title={config.kind.toUpperCase()} />
         <PlayerStrip players={entries} />
         <VisitStrip darts={view.visit.darts} />
-        <ScrollView contentContainerStyle={{ alignItems: "center", padding: 8 }}>
-          <Panel
-            onLand={throwDart}
-            onScoreFeedback={(feedback) => {
-              if (feedback.text === "MISS" || feedback.text === "CAP!") playSound("miss");
-            }}
-            onUpgrade={throwDart}
-            view={view}
-            width={Math.min(width - 16, 420)}
-          />
-        </ScrollView>
+        {view.panel.kind === "cricket" ? (
+          // Cricket fills the remaining space as one packed, non-scrolling sheet: measure
+          // the leftover height and hand it to the panel so the rows grow to fit it.
+          <View className="flex-1" onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}>
+            <Panel
+              height={panelHeight}
+              onLand={throwDart}
+              onScoreFeedback={(feedback) => {
+                if (feedback.text === "MISS" || feedback.text === "CAP!") playSound("miss");
+              }}
+              onUpgrade={throwDart}
+              view={view}
+              width={width}
+            />
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={{ alignItems: "center", padding: 8 }}>
+            <Panel
+              onLand={throwDart}
+              onScoreFeedback={(feedback) => {
+                if (feedback.text === "MISS" || feedback.text === "CAP!") playSound("miss");
+              }}
+              onUpgrade={throwDart}
+              view={view}
+              width={Math.min(width - 16, 420)}
+            />
+          </ScrollView>
+        )}
       </View>
 
       <GameControlBar>
         <GameControlButton disabled={log.length === 0} label="UNDO" onPress={undo} />
+        {view.panel.kind === "cricket" ? (
+          // Cricket records a miss here rather than from a sheet row — see CricketGrid. The
+          // miss sound rode on the old sheet row's feedback, so fire it here to keep parity.
+          <GameControlButton
+            label="MISS"
+            onPress={() => {
+              playSound("miss");
+              throwDart(MISS);
+            }}
+          />
+        ) : null}
         <GameControlButton label="END TURN" onPress={endTurn} />
       </GameControlBar>
 

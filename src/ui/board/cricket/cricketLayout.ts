@@ -7,14 +7,12 @@ import { CRICKET_TARGETS, type CricketTarget } from "@/core/game/cricket";
  * list (this is keyed by seat x row, and hit-testing is scoped to a single active
  * seat's column), so it gets its own module rather than being forced into that one.
  *
- * Row order: CRICKET_TARGETS (20,19,18,17,16,15,bull), then a MISS row — the miss
- * row isn't in the original Android layout, but the current per-dart logging model
- * needs an explicit miss affordance mid-visit (every other panel's TargetBoard has
- * an equivalent MISS action cell).
+ * Row order: CRICKET_TARGETS (20,19,18,17,16,15,bull) — one row per target, matching
+ * the original Android layout. Recording a miss is a bottom-bar button on the game
+ * shell (UNDO · MISS · END TURN), not a sheet row, so the sheet is pure targets.
  */
 
-export const MISS_ROW_INDEX = CRICKET_TARGETS.length;
-export const TOTAL_ROWS = CRICKET_TARGETS.length + 1;
+export const TOTAL_ROWS = CRICKET_TARGETS.length;
 
 /** The player-column width relative to the label column — mirrors frag_game.xml's
  * layout_weight="1" (player columns) vs layout_weight=".7" (label column). */
@@ -35,8 +33,19 @@ export interface CricketGridLayout {
 }
 
 /** Splits seats into two halves around the label column — matches the original
- * exactly for 2 players (one column each side); a generalization for 3-4. */
-export function cricketGridLayout(seatCount: number, width: number): CricketGridLayout {
+ * exactly for 2 players (one column each side); a generalization for 3-4.
+ *
+ * `maxHeight`, when given, makes the sheet FILL that height: rows grow to divide it
+ * evenly (`maxHeight / TOTAL_ROWS`) instead of being derived from column width. That's
+ * what keeps the buttons big and the whole sheet on one screen even at 4 players —
+ * more columns shrink each column's width, but the rows still use the full vertical
+ * space rather than collapsing with it. Without it, rows fall back to the width-derived
+ * aspect (the original behaviour). */
+export function cricketGridLayout(
+  seatCount: number,
+  width: number,
+  maxHeight?: number,
+): CricketGridLayout {
   const seats = Array.from({ length: seatCount }, (_, i) => i);
   const half = Math.ceil(seatCount / 2);
   const leftSeats = seats.slice(0, half);
@@ -45,7 +54,7 @@ export function cricketGridLayout(seatCount: number, width: number): CricketGrid
   const totalUnits = leftSeats.length + rightSeats.length + LABEL_WEIGHT;
   const cellWidth = width / totalUnits;
   const labelColumnWidth = cellWidth * LABEL_WEIGHT;
-  const cellHeight = cellWidth * ROW_ASPECT;
+  const cellHeight = maxHeight && maxHeight > 0 ? maxHeight / TOTAL_ROWS : cellWidth * ROW_ASPECT;
 
   return {
     labelColumnWidth,
@@ -93,9 +102,7 @@ export function cricketCellId(target: CricketTarget): number {
   return CRICKET_TARGETS.indexOf(target);
 }
 
-export type CricketHit =
-  | { readonly kind: "target"; readonly targetIndex: number }
-  | { readonly kind: "miss" };
+export type CricketHit = { readonly kind: "target"; readonly targetIndex: number };
 
 /** Hit-tests a point against ONE seat's column only — the geometry-level enforcement
  * that other seats' columns are structurally untappable, not just visually dimmed. */
@@ -110,6 +117,5 @@ export function cricketGridHitTest(
   if (point.y < 0 || point.y >= layout.height) return null;
 
   const rowIndex = Math.floor(point.y / layout.cellHeight);
-  if (rowIndex === MISS_ROW_INDEX) return { kind: "miss" };
   return { kind: "target", targetIndex: rowIndex };
 }

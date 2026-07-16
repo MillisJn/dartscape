@@ -72,7 +72,10 @@ function ScorePopupItem({ popup }: { popup: ScorePopupEntry }) {
 
 export function ScorePopupLayer({ popups }: { popups: readonly ScorePopupEntry[] }) {
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    // High zIndex + Android elevation so a popup rising off the top row draws ON TOP of
+    // the score strip above it, never behind — see GameScreen (cricket is unscrolled so
+    // nothing clips the overflow).
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: 100, elevation: 100 }]}>
       {popups.map((popup) => (
         <ScorePopupItem key={popup.id} popup={popup} />
       ))}

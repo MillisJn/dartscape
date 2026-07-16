@@ -1,49 +1,73 @@
-import { useTheme } from "@spatch-kit/theme/provider";
-import { AppText } from "@spatch-kit/ui/primitives/AppText";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { type Dart, isMiss, label, points } from "@/core/board";
+import { PALETTE } from "@/ui/theme/palette";
 
 export interface VisitStripProps {
   readonly darts: readonly Dart[];
 }
 
-function chipColor(dart: Dart, theme: ReturnType<typeof useTheme>): string {
-  if (isMiss(dart)) return theme.colors.mutedText;
+function chipColor(dart: Dart): string {
+  if (isMiss(dart)) return PALETTE.divider;
   switch (dart.ring) {
     case "single":
     case "outerBull":
-      return theme.colors.success;
+      return PALETTE.single;
     case "double":
-      return theme.colors.accent;
+      return PALETTE.double;
     case "treble":
     case "innerBull":
-      return theme.colors.warning;
+      return PALETTE.treble;
   }
 }
 
-/** This visit's darts, one chip each, coloured by multiplier — and where the upgrade animation
- * happens (the plan's "watch it land"). Props only — no store. */
+/** This visit's three darts, each in a filled box that mirrors the score boxes up top —
+ * flat columns on the header background, the throw's label big and colored by multiplier,
+ * with the running visit total as the last box. Props only — no store. */
 export function VisitStrip({ darts }: VisitStripProps) {
-  const theme = useTheme();
   const total = darts.reduce((sum, d) => sum + points(d), 0);
 
   return (
-    <View className="flex-row items-center justify-center gap-app-sm p-app-sm">
+    <View
+      style={{
+        backgroundColor: PALETTE.header,
+        borderBottomWidth: 1,
+        borderColor: PALETTE.divider,
+        borderTopWidth: 1,
+        flexDirection: "row",
+      }}
+    >
       {[0, 1, 2].map((i) => {
         const dart = darts[i];
+        const color = dart ? chipColor(dart) : PALETTE.divider;
         return (
           <View
-            className="min-w-[56px] items-center rounded-app-sm border border-border-strong px-app-sm py-app-xs"
             key={i}
-            style={dart ? { borderColor: chipColor(dart, theme) } : undefined}
+            style={{
+              alignItems: "center",
+              borderColor: PALETTE.divider,
+              borderRightWidth: 1,
+              flex: 1,
+              justifyContent: "center",
+              paddingVertical: PALETTE.controlPadding,
+            }}
           >
-            <AppText color={dart ? undefined : "mutedText"} variant="label">
+            <Text numberOfLines={1} style={{ color, fontSize: 26, fontWeight: "800" }}>
               {dart ? label(dart) : "·"}
-            </AppText>
+            </Text>
           </View>
         );
       })}
-      <AppText variant="sectionTitle">{`= ${total}`}</AppText>
+      <View
+        style={{
+          alignItems: "center",
+          backgroundColor: PALETTE.activeHighlight,
+          flex: 1,
+          justifyContent: "center",
+          paddingVertical: PALETTE.controlPadding,
+        }}
+      >
+        <Text style={{ color: PALETTE.text, fontSize: 26, fontWeight: "800" }}>{total}</Text>
+      </View>
     </View>
   );
 }

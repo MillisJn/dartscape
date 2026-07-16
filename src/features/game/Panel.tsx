@@ -13,6 +13,9 @@ import { ScoreGrid } from "@/ui/board/x01/ScoreGrid";
 export interface PanelProps {
   readonly view: GameView;
   readonly width: number;
+  /** Available vertical space for the panel. Cricket uses it to fill the screen (one
+   * packed, non-scrolling sheet); the other panels are width-driven and ignore it. */
+  readonly height?: number;
   readonly onLand: (dart: Dart) => void;
   readonly onUpgrade: (dart: Dart) => void;
   /** Cricket-only today: the merged sheet's miss/CAP feedback, for a sound trigger at
@@ -22,13 +25,14 @@ export interface PanelProps {
 
 /** One shell, eight panels — view(state) returns a discriminated panel, so this is the one place
  * that switches on it. */
-export function Panel({ view, width, onLand, onUpgrade, onScoreFeedback }: PanelProps) {
+export function Panel({ view, width, height, onLand, onUpgrade, onScoreFeedback }: PanelProps) {
   switch (view.panel.kind) {
     case "x01":
       return <ScoreGrid onLand={onLand} onUpgrade={onUpgrade} view={view} width={width} />;
     case "cricket":
       return (
         <CricketGrid
+          height={height}
           onLand={onLand}
           onScoreFeedback={onScoreFeedback}
           onUpgrade={onUpgrade}

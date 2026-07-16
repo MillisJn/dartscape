@@ -5,7 +5,6 @@ import {
   cricketColumnX,
   cricketGridHitTest,
   cricketGridLayout,
-  MISS_ROW_INDEX,
   TOTAL_ROWS,
 } from "./cricketLayout";
 
@@ -28,10 +27,10 @@ describe("cricketGridLayout", () => {
     expect(layout.rightSeats).toEqual([2]);
   });
 
-  it("has 8 rows tall (7 targets + MISS)", () => {
+  it("has 7 rows tall (one per cricket target)", () => {
     const layout = cricketGridLayout(2, 500);
     expect(layout.height).toBeCloseTo(layout.cellHeight * TOTAL_ROWS);
-    expect(TOTAL_ROWS).toBe(8);
+    expect(TOTAL_ROWS).toBe(7);
   });
 });
 
@@ -78,12 +77,6 @@ describe("cricketGridHitTest", () => {
     const layout = cricketGridLayout(2, 500);
     const point = { x: layout.cellWidth / 2, y: layout.cellHeight * 2 + 1 };
     expect(cricketGridHitTest(layout, 0, point)).toEqual({ kind: "target", targetIndex: 2 });
-  });
-
-  it("resolves the MISS row", () => {
-    const layout = cricketGridLayout(2, 500);
-    const point = { x: layout.cellWidth / 2, y: layout.cellHeight * MISS_ROW_INDEX + 1 };
-    expect(cricketGridHitTest(layout, 0, point)).toEqual({ kind: "miss" });
   });
 
   it("ignores a point inside a DIFFERENT seat's column", () => {

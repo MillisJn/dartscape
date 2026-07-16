@@ -1,13 +1,13 @@
 import { BlurMask, Canvas, Circle, Group, Line } from "@shopify/react-native-skia";
 import { useCallback, useMemo } from "react";
 import { GestureDetector } from "react-native-gesture-handler";
-import { bed, type Dart, INNER_BULL, isMiss, MISS, OUTER_BULL } from "@/core/board";
+import { bed, type Dart, INNER_BULL, MISS, OUTER_BULL } from "@/core/board";
 import { CRICKET_TARGETS, type CricketTarget, targetOf } from "@/core/game/cricket";
 import { blendHex, disabledText, PALETTE } from "@/ui/theme/palette";
 import type { Multiplier } from "../shared/dartGesture";
 import { useCellAnimations } from "../shared/useCellAnimations";
-import { ACTION_CELL, useDartGesture } from "../shared/useDartGesture";
-import { type CricketGridLayout, cricketCellId, MISS_ROW_INDEX, TOTAL_ROWS } from "./cricketLayout";
+import { useDartGesture } from "../shared/useDartGesture";
+import { type CricketGridLayout, cricketCellId, TOTAL_ROWS } from "./cricketLayout";
 import { cricketMarkerPaths } from "./cricketMarks";
 import { type CricketScoreFeedback, cricketScoreFeedback } from "./scoreFeedback";
 
@@ -69,11 +69,11 @@ export function CricketCellCanvas({
 
   const handleScore = useCallback(
     (dart: Dart) => {
-      // Every non-miss dart reaching here was built by our own toDart(row, multiplier)
+      // Every dart reaching here was built by our own targetToDart(row, multiplier)
       // closure above, so it always resolves back to a valid CRICKET_TARGETS row.
-      const row = isMiss(dart) ? MISS_ROW_INDEX : cricketCellId(targetOf(dart) as CricketTarget);
-      const wasDead = row < MISS_ROW_INDEX && (dead[row] ?? false);
-      const wasClosedByThrower = row < MISS_ROW_INDEX && (marks[row] ?? 0) >= CLOSED_MARKS;
+      const row = cricketCellId(targetOf(dart) as CricketTarget);
+      const wasDead = dead[row] ?? false;
+      const wasClosedByThrower = (marks[row] ?? 0) >= CLOSED_MARKS;
       const feedback = cricketScoreFeedback(dart, wasDead, wasClosedByThrower);
       animations.hitFlash(row, feedback.color);
       onScored?.(row, dart, feedback);
@@ -85,13 +85,11 @@ export function CricketCellCanvas({
     hitTest: (point) => {
       if (!active) return null;
       const row = rowAt(point);
-      if (row === null || row === MISS_ROW_INDEX) return null;
+      if (row === null) return null;
       return { cellId: row, toDart: (multiplier) => targetToDart(row, multiplier) };
     },
-    hitTestAction: (point) => {
-      if (!active) return null;
-      return rowAt(point) === MISS_ROW_INDEX ? MISS : null;
-    },
+    // Cricket has no in-sheet action cell — a miss is the bottom bar's MISS button now.
+    hitTestAction: () => null,
     onLand: (dart) => {
       handleScore(dart);
       onLand?.(dart);
@@ -100,8 +98,8 @@ export function CricketCellCanvas({
       handleScore(dart);
       onUpgrade?.(dart);
     },
-    onPressStart: (cellId) => animations.lightUp(cellId === ACTION_CELL ? MISS_ROW_INDEX : cellId),
-    onPressEnd: (cellId) => animations.lightDown(cellId === ACTION_CELL ? MISS_ROW_INDEX : cellId),
+    onPressStart: (cellId) => animations.lightUp(cellId),
+    onPressEnd: (cellId) => animations.lightDown(cellId),
   });
 
   const baseColor = active ? PALETTE.text : disabledText();
@@ -118,14 +116,7 @@ export function CricketCellCanvas({
           const blendColor = animations.blendColorOf(row);
           const color = ratio > 0 ? blendHex(baseColor, blendColor, ratio) : baseColor;
 
-          // The MISS row has no mark count of its own — just a plain dash, active
-          // columns only (there's nothing to tap or show for an inactive seat there).
-          const geometry =
-            row === MISS_ROW_INDEX
-              ? active
-                ? cricketMarkerPaths(cx, cy, radius, 0)
-                : null
-              : cricketMarkerPaths(cx, cy, radius, marks[row] ?? 0);
+          const geometry = cricketMarkerPaths(cx, cy, radius, marks[row] ?? 0);
 
           if (!geometry) return null;
 
