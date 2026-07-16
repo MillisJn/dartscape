@@ -12,9 +12,9 @@ import { x01HitTestAction, x01HitTestTarget } from "./x01Targets";
 export interface ScoreGridProps {
   readonly view: GameView;
   readonly width: number;
-  /** The instant single landing on press. */
+  /** A gesture that resolved to a plain single. */
   readonly onLand: (dart: Dart) => void;
-  /** A double/treble upgrade — pops the previous dart, pushes this one. */
+  /** A gesture that resolved to a double or treble. */
   readonly onUpgrade: (dart: Dart) => void;
 }
 

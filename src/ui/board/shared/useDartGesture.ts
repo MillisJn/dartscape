@@ -29,9 +29,9 @@ export interface UseDartGestureOptions {
   hitTest(point: { readonly x: number; readonly y: number }): DartGestureTarget | null;
   /** A single-action cell (BUST, a miss button, ...): fires immediately on release, no escalation. */
   hitTestAction(point: { readonly x: number; readonly y: number }): Dart | null;
-  /** The instant single landing on press. */
+  /** A gesture that resolved to a plain single (a tap, released with no second tap or hold). */
   onLand(dart: Dart): void;
-  /** A double/treble upgrade — the caller pops the previous dart and pushes this one. */
+  /** A gesture that resolved to a double (a second tap) or treble (a hold). */
   onUpgrade(dart: Dart): void;
   /** Fired the instant a touch goes down on a cell (escalating or action) — for
    * press-visual feedback (a light-up flash) independent of whether it lands a dart.
@@ -75,13 +75,13 @@ export function useDartGesture({
       if (result.emit) {
         const target = targetsRef.current.get(result.emit.cell);
         if (target) {
-          if (result.emit.kind === "land") onLand(target.toDart("single"));
+          if (result.emit.multiplier === "single") onLand(target.toDart("single"));
           else onUpgrade(target.toDart(result.emit.multiplier));
         }
       }
 
       clearTimer();
-      if (result.state.phase === "pending" && result.state.isDown) {
+      if (result.state.phase === "pending") {
         const cell = result.state.cell;
         timerRef.current = setTimeout(() => {
           apply({ kind: "holdElapsed", cell, t: now() });

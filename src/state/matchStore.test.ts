@@ -38,14 +38,6 @@ describe("matchStore", () => {
     expect(useMatchStore.getState().log).toEqual([{ ring: "single", wedge: 20 }]);
   });
 
-  it("upgrade pops the previous dart and pushes the replacement, in one op", () => {
-    useMatchStore.getState().reset();
-    useMatchStore.getState().start(DEFAULT_CONFIG.x01, [human, hardBot]);
-    useMatchStore.getState().throwDart({ ring: "single", wedge: 20 });
-    useMatchStore.getState().upgrade({ ring: "double", wedge: 20 });
-    expect(useMatchStore.getState().log).toEqual([{ ring: "double", wedge: 20 }]);
-  });
-
   it("a bot dart and a human dart take the exact same path (throwDart)", () => {
     useMatchStore.getState().reset();
     useMatchStore.getState().start(DEFAULT_CONFIG.x01, [human, hardBot]);

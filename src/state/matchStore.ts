@@ -7,8 +7,9 @@ import type { LegResult, MatchFormat } from "@/core/match/match";
 /**
  * `{ config, players, log, format, results }` and nothing else — everything else (whose turn it
  * is, scores, the winner, checkout hints) is derived on read via state/selectors.ts. A dart is
- * `log.push`; undo is `log.pop`; an upgrade (single -> double/treble) is pop-then-push. That's the
- * whole seam between a finger (or a bot timer) and the core's reduce().
+ * `log.push`; undo is `log.pop`. That's the whole seam between a finger (or a bot timer) and the
+ * core's reduce() — the gesture layer (useDartGesture.ts) resolves single/double/treble itself
+ * before a dart ever reaches here, so the store never needs to know a throw was disambiguated.
  */
 
 export interface MatchStoreState {
@@ -25,8 +26,6 @@ export interface MatchStoreActions {
   start(config: GameConfig, players: readonly Player[], format?: MatchFormat): void;
   throwDart(dart: Dart): void;
   undo(): void;
-  /** Pop the last dart, push its replacement — the gesture's "upgrade" emit, one log op. */
-  upgrade(dart: Dart): void;
   recordLegResult(winnerPlayerId: string): void;
   /** Same match, same config: a fresh leg with (possibly reseated) players. */
   startNextLeg(seatedPlayers: readonly Player[]): void;
@@ -59,10 +58,6 @@ export const useMatchStore = create<MatchStore>((set) => ({
 
   undo() {
     set((s) => ({ log: s.log.slice(0, -1) }));
-  },
-
-  upgrade(dart) {
-    set((s) => ({ log: [...s.log.slice(0, -1), dart] }));
   },
 
   recordLegResult(winnerPlayerId) {

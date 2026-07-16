@@ -40,7 +40,7 @@ export function GameScreen() {
   const { width } = useWindowDimensions();
 
   const storeState = useMatchStore((s) => s);
-  const { config, log, players, throwDart, upgrade, undo, startNextLeg } = storeState;
+  const { config, log, players, throwDart, undo, startNextLeg } = storeState;
   const botSpeed = useSettingsStore((s) => s.botSpeed);
   const checkoutHintsEnabled = useSettingsStore((s) => s.checkoutHintsEnabled);
 
@@ -157,7 +157,7 @@ export function GameScreen() {
             onScoreFeedback={(feedback) => {
               if (feedback.text === "MISS" || feedback.text === "CAP!") playSound("miss");
             }}
-            onUpgrade={upgrade}
+            onUpgrade={throwDart}
             view={view}
             width={Math.min(width - 16, 420)}
           />

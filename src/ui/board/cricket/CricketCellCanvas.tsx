@@ -29,6 +29,8 @@ export interface CricketCellCanvasProps {
 
 const MARKER_RADIUS_FACTOR = 0.32;
 const STROKE_FACTOR = 1 / 12;
+/** Marks are capped at 3 (closed) on the view's row data — see CricketRow in view.ts. */
+const CLOSED_MARKS = 3;
 
 function targetToDart(row: number, multiplier: Multiplier): Dart {
   const target = CRICKET_TARGETS[row];
@@ -71,11 +73,12 @@ export function CricketCellCanvas({
       // closure above, so it always resolves back to a valid CRICKET_TARGETS row.
       const row = isMiss(dart) ? MISS_ROW_INDEX : cricketCellId(targetOf(dart) as CricketTarget);
       const wasDead = row < MISS_ROW_INDEX && (dead[row] ?? false);
-      const feedback = cricketScoreFeedback(dart, wasDead);
+      const wasClosedByThrower = row < MISS_ROW_INDEX && (marks[row] ?? 0) >= CLOSED_MARKS;
+      const feedback = cricketScoreFeedback(dart, wasDead, wasClosedByThrower);
       animations.hitFlash(row, feedback.color);
       onScored?.(row, dart, feedback);
     },
-    [animations, dead, onScored],
+    [animations, dead, marks, onScored],
   );
 
   const gesture = useDartGesture({

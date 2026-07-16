@@ -13,70 +13,88 @@ function apply(state: GestureState, touches: Parameters<typeof reduceGesture>[1]
 }
 
 describe("dartGesture", () => {
-  it("lands a single instantly on press", () => {
+  it("a press alone emits nothing — a gesture never resolves until it's disambiguated", () => {
     const result = reduceGesture(IDLE_GESTURE, { kind: "down", cell: 20, t: 0 });
-    expect(result.emit).toEqual({ kind: "land", cell: 20 });
-    expect(result.state).toEqual({ phase: "pending", cell: 20, downAt: 0, isDown: true });
+    expect(result.emit).toBeUndefined();
+    expect(result.state).toEqual({ phase: "pending", cell: 20, isDown: true, since: 0 });
   });
 
-  it("a tap (up before the window closes, nothing else) resolves to single — no further emit", () => {
+  it("a tap (up before the window closes, nothing else) resolves to single once the window elapses", () => {
     const { state, emits } = apply(IDLE_GESTURE, [
       { kind: "down", cell: 20, t: 0 },
       { kind: "up", cell: 20, t: 40 },
     ]);
-    // The single already landed on press; releasing early just keeps the window open.
+    // Released within the window: still waiting to see whether a second tap follows.
     expect(emits[1]).toBeUndefined();
-    expect(state).toEqual({ phase: "pending", cell: 20, downAt: 0, isDown: false });
+    expect(state).toEqual({ phase: "pending", cell: 20, isDown: false, since: 40 });
 
-    // If the window then elapses with nothing else happening, it settles as a plain single.
-    const settled = reduceGesture(state, { kind: "holdElapsed", cell: 20, t: 250 });
-    expect(settled.emit).toBeUndefined();
+    // The caller's timer fires HOLD_MS after the release (not the original press) — nothing
+    // else arrived, so it settles as a plain single. This is the ONLY emit for this gesture.
+    const settled = reduceGesture(state, { kind: "holdElapsed", cell: 20, t: 40 + HOLD_MS });
+    expect(settled.emit).toEqual({ kind: "resolve", cell: 20, multiplier: "single" });
     expect(settled.state).toEqual({ phase: "idle" });
   });
 
-  it("a second tap within the window upgrades to double, replacing the single", () => {
+  it("a second tap within the window resolves straight to double — no single ever fires", () => {
     const { state, emits } = apply(IDLE_GESTURE, [
       { kind: "down", cell: 20, t: 0 },
       { kind: "up", cell: 20, t: 40 },
       { kind: "down", cell: 20, t: 180 },
     ]);
-    expect(emits[0]).toEqual({ kind: "land", cell: 20 });
-    expect(emits[2]).toEqual({ kind: "upgrade", cell: 20, multiplier: "double" });
+    expect(emits[0]).toBeUndefined();
+    expect(emits[1]).toBeUndefined();
+    expect(emits[2]).toEqual({ kind: "resolve", cell: 20, multiplier: "double" });
     expect(state).toEqual({ phase: "idle" });
   });
 
-  it("holding past HOLD_MS upgrades to treble", () => {
+  it("holding past HOLD_MS resolves to treble", () => {
     const { state, emits } = apply(IDLE_GESTURE, [
       { kind: "down", cell: 20, t: 0 },
-      { kind: "holdElapsed", cell: 20, t: 300 },
+      { kind: "holdElapsed", cell: 20, t: HOLD_MS },
     ]);
-    expect(emits[1]).toEqual({ kind: "upgrade", cell: 20, multiplier: "treble" });
+    expect(emits[0]).toBeUndefined();
+    expect(emits[1]).toEqual({ kind: "resolve", cell: 20, multiplier: "treble" });
     expect(state).toEqual({ phase: "idle" });
   });
 
-  it("a press on a different cell commits the first as a single and starts fresh", () => {
+  it("a press on a different cell abandons an unresolved (still-down) first press", () => {
     const { state, emits } = apply(IDLE_GESTURE, [
       { kind: "down", cell: 20, t: 0 },
       { kind: "down", cell: 5, t: 100 },
     ]);
-    expect(emits[0]).toEqual({ kind: "land", cell: 20 });
-    // Nothing further to emit for cell 20 — it already landed as a single.
-    expect(emits[1]).toEqual({ kind: "land", cell: 5 });
-    expect(state).toEqual({ phase: "pending", cell: 5, downAt: 100, isDown: true });
+    // Cell 20 never released — nothing to score for it, unlike a real single-finger touch
+    // sequence (which can't produce this), but a safe fallback all the same.
+    expect(emits[0]).toBeUndefined();
+    expect(emits[1]).toBeUndefined();
+    expect(state).toEqual({ phase: "pending", cell: 5, isDown: true, since: 100 });
   });
 
-  it("a re-tap after the window has already elapsed starts a fresh single, not a double", () => {
+  it("a press on a different cell settles an already-released first press as a single", () => {
     const { state, emits } = apply(IDLE_GESTURE, [
       { kind: "down", cell: 20, t: 0 },
       { kind: "up", cell: 20, t: 40 },
-      { kind: "down", cell: 20, t: HOLD_MS + 10 },
+      { kind: "down", cell: 5, t: 100 },
     ]);
-    expect(emits[2]).toEqual({ kind: "land", cell: 20 });
+    expect(emits[1]).toBeUndefined();
+    expect(emits[2]).toEqual({ kind: "resolve", cell: 20, multiplier: "single" });
+    expect(state).toEqual({ phase: "pending", cell: 5, isDown: true, since: 100 });
+  });
+
+  it("a re-tap after the window has already elapsed starts a fresh press, not a double", () => {
+    const { state, emits } = apply(IDLE_GESTURE, [
+      { kind: "down", cell: 20, t: 0 },
+      { kind: "up", cell: 20, t: 40 },
+      // The caller's timer fires first in real operation, settling the first tap as a single.
+      { kind: "holdElapsed", cell: 20, t: 40 + HOLD_MS },
+      { kind: "down", cell: 20, t: 40 + HOLD_MS + 10 },
+    ]);
+    expect(emits[2]).toEqual({ kind: "resolve", cell: 20, multiplier: "single" });
+    expect(emits[3]).toBeUndefined();
     expect(state).toEqual({
       phase: "pending",
       cell: 20,
-      downAt: HOLD_MS + 10,
       isDown: true,
+      since: 40 + HOLD_MS + 10,
     });
   });
 
@@ -87,13 +105,13 @@ describe("dartGesture", () => {
   });
 
   it("a stray holdElapsed for a cell that already resolved is a no-op", () => {
-    const { state: afterUpgrade } = apply(IDLE_GESTURE, [
+    const { state: afterDouble } = apply(IDLE_GESTURE, [
       { kind: "down", cell: 20, t: 0 },
       { kind: "up", cell: 20, t: 40 },
-      { kind: "down", cell: 20, t: 100 }, // double-tap: upgrades to double, back to idle
+      { kind: "down", cell: 20, t: 100 }, // double-tap: resolves immediately, back to idle
     ]);
-    expect(afterUpgrade).toEqual({ phase: "idle" });
-    const stray = reduceGesture(afterUpgrade, { kind: "holdElapsed", cell: 20, t: 250 });
+    expect(afterDouble).toEqual({ phase: "idle" });
+    const stray = reduceGesture(afterDouble, { kind: "holdElapsed", cell: 20, t: 250 });
     expect(stray.emit).toBeUndefined();
     expect(stray.state).toEqual({ phase: "idle" });
   });
@@ -103,7 +121,7 @@ describe("dartGesture", () => {
       { kind: "down", cell: 20, t: 0 },
       { kind: "up", cell: 20, t: HOLD_MS },
     ]);
-    expect(emits[1]).toEqual({ kind: "upgrade", cell: 20, multiplier: "treble" });
+    expect(emits[1]).toEqual({ kind: "resolve", cell: 20, multiplier: "treble" });
     expect(state).toEqual({ phase: "idle" });
   });
 });
