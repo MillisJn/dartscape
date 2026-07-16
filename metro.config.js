@@ -14,6 +14,11 @@ config.resolver.nodeModulesPaths = [
   ...(config.resolver.nodeModulesPaths || []),
 ];
 
+// The game's sound effects (assets/sounds/*.ogg, ported from Dartscape OG) are Ogg Vorbis, which
+// isn't in Metro's default assetExts — without this, require()-ing them resolves to nothing and no
+// audio bundles. Android/iOS/web all decode Ogg, so one line here is enough.
+config.resolver.assetExts = [...new Set([...config.resolver.assetExts, "ogg"])];
+
 module.exports = withNativewind(config, {
   input: "./global.css",
   content: [

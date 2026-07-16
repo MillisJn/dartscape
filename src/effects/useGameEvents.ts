@@ -36,6 +36,10 @@ export function applyGameEvent(event: GameEvent): void {
       showAppToast({ message: "CHECKOUT!" });
       break;
     case "marked":
+      // Cricket's per-dart click — every target hit emits `marked` (even a mark:0 hit on a
+      // number you've already closed), so this is the reliable "a dart landed" signal that
+      // makes the sheet audibly responsive, mirroring the original's per-hit DART sound.
+      playSound("dartScored");
       break;
     case "targetClosed":
       playSound("targetClosed");
