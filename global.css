@@ -1,3 +1,214 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/theme.css" layer(theme);
+/*
+ * Utilities are imported UNLAYERED (no `layer(utilities)`) on purpose. react-native-web
+ * injects its base component styles (e.g. `.css-view-*` with `background-color: transparent`,
+ * `padding: 0`, `margin: 0`, `border-width: 0`) as UNLAYERED rules into #react-native-stylesheet.
+ * Any unlayered rule beats any @layer'd rule regardless of specificity, so when utilities sat in
+ * `@layer utilities` the RNW base won every time -> `bg-*`, `p-*`, `m-*`, `border-*` silently no-op'd
+ * on web (buttons rendered transparent/zero-padding). Unlayered utilities tie RNW on specificity and
+ * win by source order (this CSS loads after #react-native-stylesheet). We avoid `important` so inline
+ * `style={{}}` props can still override a className (inline > unlayered class).
+ */
+@import "tailwindcss/utilities.css" source(none);
+@import "nativewind/theme";
+
+@source "./src";
+@source "./app";
+
+/*
+ * `inline` is required: every token below resolves to a `--fp-*` variable that is
+ * injected at runtime by <VariableContextProvider> (see src/theme/nativewind.ts).
+ * Without `inline`, Tailwind emits `--color-x: var(--fp-x)` onto :root and utilities
+ * reference `var(--color-x)`. On web that indirection is resolved AT :root, where the
+ * `--fp-*` vars don't exist (they're only set on a nested wrapper div) -> every themed
+ * color/font/spacing computes to the guaranteed-invalid value and the app renders
+ * unstyled. `inline` makes utilities reference `var(--fp-x)` directly so the
+ * runtime-injected wrapper vars resolve on descendants. Native is unaffected (its
+ * runtime resolves var() lazily per element either way).
+ */
+@theme inline {
+  /* --- Dark Mode Strategy --- */
+  --variant-dark: class(selector, ".dark");
+
+  /* --- Colors --- */
+  --color-accent: var(--fp-color-accent);
+  --color-accent-contrast: var(--fp-color-accent-contrast);
+  --color-accent-muted: var(--fp-color-accent-muted);
+  --color-background: var(--fp-color-background);
+  --color-background-muted: var(--fp-color-background-muted);
+  --color-border: var(--fp-color-border);
+  --color-border-strong: var(--fp-color-border-strong);
+  --color-danger: var(--fp-color-danger);
+  --color-focus-glow: var(--fp-color-focus-glow);
+  --color-focus-ring: var(--fp-color-focus-ring);
+  --color-input-background: var(--fp-color-input-background);
+  --color-input-placeholder: var(--fp-color-input-placeholder);
+  --color-muted-text: var(--fp-color-muted-text);
+  --color-success: var(--fp-color-success);
+  --color-surface: var(--fp-color-surface);
+  --color-surface-muted: var(--fp-color-surface-muted);
+  --color-surface-overlay: var(--fp-color-surface-overlay);
+  --color-surface-raised: var(--fp-color-surface-raised);
+  --color-text: var(--fp-color-text);
+  --color-warning: var(--fp-color-warning);
+
+  /* --- Border Radius --- */
+  --radius-app-lg: var(--fp-radius-lg);
+  --radius-app-md: var(--fp-radius-md);
+  --radius-app-pill: var(--fp-radius-pill);
+  --radius-app-sm: var(--fp-radius-sm);
+
+  /* --- Border Width --- */
+  --border-width-app-hairline: var(--fp-border-width-hairline);
+  --border-width-app-md: var(--fp-border-width-md);
+  --border-width-app-sm: var(--fp-border-width-sm);
+
+  /* --- Box Shadows --- */
+  --shadow-app-button: var(--fp-shadow-button);
+  --shadow-app-card: var(--fp-shadow-card);
+  --shadow-app-focus: var(--fp-shadow-focus);
+
+  /* --- Typography --- */
+  --font-display: var(--fp-font-display);
+  --font-ibm: var(--fp-font-ibm);
+  --font-sans: var(--fp-font-sans);
+  --font-sans-bold: var(--fp-font-sans-bold);
+  --font-sans-medium: var(--fp-font-sans-medium);
+  --font-mono: var(--fp-font-mono);
+
+  --text-app-body: var(--fp-type-body);
+  --text-app-caption: var(--fp-type-caption);
+  --text-app-eyebrow: var(--fp-type-eyebrow);
+  --text-app-hero: var(--fp-type-hero);
+  --text-app-label: var(--fp-type-label);
+  --text-app-section: var(--fp-type-section-title);
+  --text-app-section-title: var(--fp-type-section-title);
+  --text-app-title: var(--fp-type-title);
+
+  --tracking-app-eyebrow: 1px;
+
+  --leading-app-body: var(--fp-line-body);
+  --leading-app-hero: var(--fp-line-hero);
+  --leading-app-title: var(--fp-line-title);
+
+  /* --- Sizing & Spacing --- */
+  --spacing-app-lg: var(--fp-space-lg);
+  --spacing-app-md: var(--fp-space-md);
+  --spacing-app-sm: var(--fp-space-sm);
+  --spacing-app-xl: var(--fp-space-xl);
+  --spacing-app-xs: var(--fp-space-xs);
+  --spacing-app-xxl: var(--fp-space-xxl);
+  --spacing-app-xxs: var(--fp-space-xxs);
+  --spacing-app-gutter: var(--fp-space-gutter);
+  --spacing-app-section-gap: var(--fp-space-section-gap);
+
+  --height-app-xxl: var(--fp-space-xxl);
+  --width-app-xxl: var(--fp-space-xxl);
+
+  /* --- Animations & Motion --- */
+  --transition-delay-app-md: var(--fp-motion-delay-md);
+  --transition-delay-app-sm: var(--fp-motion-delay-sm);
+  --transition-delay-app-xs: var(--fp-motion-delay-xs);
+
+  --animate-duration-app-fast: var(--fp-motion-duration-fast);
+  --animate-duration-app-normal: var(--fp-motion-duration-normal);
+  --animate-duration-app-slow: var(--fp-motion-duration-slow);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Web interaction polish (web only — native ignores CSS). These fix the browser
+ * defaults that don't match the app: the black focus box on click, the grey tap
+ * flash, and the missing pointer cursor on actionable elements.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/* Remove the browser's default focus ring for POINTER focus (the black/blue box you
+ * see when clicking an input) but KEEP it for KEYBOARD focus (:focus-visible) so
+ * accessibility isn't regressed. Never blanket `*:focus { outline: none }`. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Accessible, themed focus ring for keyboard navigation (Tab). Falls back to a blue
+ * ring if the runtime theme var isn't resolved on this element. Text inputs that carry
+ * their own focus treatment (TextField sets outlineWidth:0 inline) suppress this ring;
+ * other controls get a themed keyboard-focus ring instead of the browser's black box. */
+:focus-visible {
+  outline: 2px solid var(--fp-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* No grey/blue tap flash on touch (mobile web). */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pointer cursor on actionable elements (react-native-web renders these as divs). */
+[role="button"],
+[role="link"],
+[role="tab"],
+[role="menuitem"],
+[role="switch"],
+[role="checkbox"],
+button,
+a,
+summary,
+label[for] {
+  cursor: pointer;
+}
+
+/* Disabled controls shouldn't look clickable. */
+[aria-disabled="true"],
+[disabled] {
+  cursor: default;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Themed scrollbars (web only). The browser's default chrome scrollbar clashes
+ * with the app surfaces — too wide, hard grey track, square thumb. We replace it
+ * with a slim, track-less, pill thumb in the theme palette.
+ *
+ * Colors resolve from the runtime `--fp-*` vars set on the app wrapper (and the
+ * overlay root), so every in-app scroller follows light/dark automatically. The
+ * hex fallbacks (light theme border-strong / muted-text) only apply to scrollers
+ * outside the themed wrapper — e.g. the document scrollbar — which the flex app
+ * shell virtually never produces.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/* Firefox + Chromium 121+ (standard properties).
+ * NOTE: `scrollbar-width` MUST stay `auto`, not `thin`. In Chromium, setting it to
+ * `thin`/`none` makes the browser render its own fixed-width bar and IGNORE every
+ * `::-webkit-scrollbar` rule below — so the width set there silently does nothing.
+ * `auto` hands control back to the webkit pseudo-elements (Chrome/Edge/Safari) while
+ * Firefox still gets a normal-width bar tinted by `scrollbar-color`. */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: var(--fp-color-border-strong, #a5aea1) transparent;
+}
+
+/* WebKit / Blink (Safari, Chrome, Edge) — finer control of width, inset & radius. */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--fp-color-border-strong, #a5aea1);
+  border-radius: 9999px;
+  /* Transparent border + padding-box clip insets the thumb so it floats as a
+   * slim pill instead of filling the full gutter width. */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--fp-color-muted-text, #536050);
+}
+
+/* Don't draw the little square where the two scrollbars meet. */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

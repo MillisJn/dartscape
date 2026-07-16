@@ -11,7 +11,8 @@
     "paths": {
       "@spatch-kit/*": ["./src/spatch-kit/*"],
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["nativewind/types", "node"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "android", "ios"]
