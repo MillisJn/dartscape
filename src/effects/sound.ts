@@ -12,7 +12,9 @@ export type SoundName =
   | "won"
   | "targetClosed"
   | "homeRun"
-  | "miss";
+  | "miss"
+  /** A number going dead (closed by everyone) — the scratch that "crosses it out". */
+  | "scratch";
 
 export type SoundPlayer = (sound: SoundName) => void;
 

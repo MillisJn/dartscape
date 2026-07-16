@@ -21,6 +21,9 @@ export const PALETTE = {
   red: "#FF0000",
   redLight: "#FF8888",
   controlPadding: 6,
+  /** Translucent overlay for a closed (dead) cricket row — darkens the whole line so it
+   * reads as out of play, like the original's disabled shading. 8-digit hex (RRGGBBAA). */
+  closedShade: "#00000055",
 } as const;
 
 interface Rgb {

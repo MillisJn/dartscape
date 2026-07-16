@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 import { GestureDetector } from "react-native-gesture-handler";
 import { bed, type Dart, INNER_BULL, MISS, OUTER_BULL } from "@/core/board";
 import { CRICKET_TARGETS, type CricketTarget, targetOf } from "@/core/game/cricket";
-import { blendHex, disabledText, PALETTE } from "@/ui/theme/palette";
+import { blendHex, PALETTE } from "@/ui/theme/palette";
 import type { Multiplier } from "../shared/dartGesture";
 import { useCellAnimations } from "../shared/useCellAnimations";
 import { useDartGesture } from "../shared/useDartGesture";
@@ -29,6 +29,9 @@ export interface CricketCellCanvasProps {
 
 const MARKER_RADIUS_FACTOR = 0.32;
 const STROKE_FACTOR = 1 / 12;
+/** The empty-cell dash is drawn thicker than the tally strokes — a chunkier bar reads better
+ * as "nothing here yet" than a thin line (the original drew it as a filled rect, not a stroke). */
+const EMPTY_DASH_STROKE_FACTOR = 1.7;
 /** Marks are capped at 3 (closed) on the view's row data — see CricketRow in view.ts. */
 const CLOSED_MARKS = 3;
 
@@ -56,6 +59,7 @@ export function CricketCellCanvas({
   const { cellWidth: width, cellHeight } = layout;
   const height = cellHeight * TOTAL_ROWS;
   const strokeWidth = Math.min(width, cellHeight) * STROKE_FACTOR;
+  const dashStroke = strokeWidth * EMPTY_DASH_STROKE_FACTOR;
   const radius = Math.min(width, cellHeight) * MARKER_RADIUS_FACTOR;
 
   const rowAt = useCallback(
@@ -102,7 +106,9 @@ export function CricketCellCanvas({
     onPressEnd: (cellId) => animations.lightDown(cellId),
   });
 
-  const baseColor = active ? PALETTE.text : disabledText();
+  // Every column draws at full brightness — the active seat is shown by a lit highlight box
+  // around its column (see CricketGrid), not by dimming everyone else.
+  const baseColor = PALETTE.text;
 
   const rows = useMemo(() => Array.from({ length: TOTAL_ROWS }, (_, i) => i), []);
 
@@ -115,6 +121,12 @@ export function CricketCellCanvas({
           const ratio = animations.ratioOf(row);
           const blendColor = animations.blendColorOf(row);
           const color = ratio > 0 ? blendHex(baseColor, blendColor, ratio) : baseColor;
+          // The blurred shadow behind each mark blends toward the same white/color as the mark —
+          // that glowing halo IS the press/hit feedback (a static black shadow shows no glow at all,
+          // which is why the light-up looked invisible before). Ported from ScoreButton's
+          // getShadowColor(blend).
+          const shadowColor =
+            ratio > 0 ? blendHex(PALETTE.textShadow, blendColor, ratio) : PALETTE.textShadow;
 
           const geometry = cricketMarkerPaths(cx, cy, radius, marks[row] ?? 0);
 
@@ -126,16 +138,16 @@ export function CricketCellCanvas({
                 <BlurMask blur={strokeWidth} style="normal" />
                 {geometry.dash ? (
                   <Line
-                    color={PALETTE.textShadow}
+                    color={shadowColor}
                     p1={{ x: geometry.dash.x1, y: geometry.dash.y1 }}
                     p2={{ x: geometry.dash.x2, y: geometry.dash.y2 }}
                     strokeCap="round"
-                    strokeWidth={strokeWidth}
+                    strokeWidth={dashStroke}
                   />
                 ) : null}
                 {geometry.diagonal1 ? (
                   <Line
-                    color={PALETTE.textShadow}
+                    color={shadowColor}
                     p1={{ x: geometry.diagonal1.x1, y: geometry.diagonal1.y1 }}
                     p2={{ x: geometry.diagonal1.x2, y: geometry.diagonal1.y2 }}
                     strokeCap="round"
@@ -144,7 +156,7 @@ export function CricketCellCanvas({
                 ) : null}
                 {geometry.diagonal2 ? (
                   <Line
-                    color={PALETTE.textShadow}
+                    color={shadowColor}
                     p1={{ x: geometry.diagonal2.x1, y: geometry.diagonal2.y1 }}
                     p2={{ x: geometry.diagonal2.x2, y: geometry.diagonal2.y2 }}
                     strokeCap="round"
@@ -153,7 +165,7 @@ export function CricketCellCanvas({
                 ) : null}
                 {geometry.circle ? (
                   <Circle
-                    color={PALETTE.textShadow}
+                    color={shadowColor}
                     cx={geometry.circle.cx}
                     cy={geometry.circle.cy}
                     r={geometry.circle.r}
@@ -169,7 +181,7 @@ export function CricketCellCanvas({
                   p1={{ x: geometry.dash.x1, y: geometry.dash.y1 }}
                   p2={{ x: geometry.dash.x2, y: geometry.dash.y2 }}
                   strokeCap="round"
-                  strokeWidth={strokeWidth}
+                  strokeWidth={dashStroke}
                 />
               ) : null}
               {geometry.diagonal1 ? (

@@ -24,6 +24,7 @@ const SOURCES: Record<SoundName, number> = {
   targetClosed: require("../../assets/sounds/swoosh.ogg"),
   homeRun: require("../../assets/sounds/baseball_hit1.ogg"),
   miss: require("../../assets/sounds/miss.ogg"),
+  scratch: require("../../assets/sounds/scratch.ogg"),
 };
 
 // Sound-effect audio session: play through the silent switch, and mix with other apps rather than

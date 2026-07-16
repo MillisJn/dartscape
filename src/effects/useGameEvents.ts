@@ -45,6 +45,8 @@ export function applyGameEvent(event: GameEvent): void {
       playSound("targetClosed");
       break;
     case "targetDead":
+      // A number just closed for everyone — the scratch sound as its row goes shaded.
+      playSound("scratch");
       break;
     case "shanghai":
       showAppToast({ message: "SHANGHAI!" });
