@@ -14,6 +14,7 @@
 
 @source "./src";
 @source "./app";
+@source "../spatch-kit";
 
 /*
  * `inline` is required: every token below resolves to a `--fp-*` variable that is
