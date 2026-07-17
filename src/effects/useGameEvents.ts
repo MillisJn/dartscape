@@ -16,6 +16,8 @@ export function applyGameEvent(event: GameEvent): void {
       playSound("dartScored");
       break;
     case "dartMissed":
+      // Every miss — a human's MISS button, a bot's stray dart — routes through this one event.
+      playSound("miss");
       break;
     case "visitEnded":
       break;

@@ -1,10 +1,10 @@
 import type { Dart } from "@/core/board";
+import type { GameEvent } from "@/core/game/events";
 import type { GameView } from "@/core/game/view";
 import { Track } from "@/ui/board/aroundTheClock/Track";
 import { Diamond } from "@/ui/board/baseball/Diamond";
 import { BigDouble } from "@/ui/board/bobs27/BigDouble";
 import { CricketGrid } from "@/ui/board/cricket/CricketGrid";
-import type { CricketScoreFeedback } from "@/ui/board/cricket/scoreFeedback";
 import { RoundsRow } from "@/ui/board/halveIt/RoundsRow";
 import { KillerBoard } from "@/ui/board/killer/KillerBoard";
 import { ClockFace } from "@/ui/board/shanghai/ClockFace";
@@ -18,23 +18,37 @@ export interface PanelProps {
   readonly height?: number;
   readonly onLand: (dart: Dart) => void;
   readonly onUpgrade: (dart: Dart) => void;
-  /** Cricket-only today: the merged sheet's miss/CAP feedback, for a sound trigger at
-   * the features layer (ui/ can't reach effects/ directly — see layerBoundary.test.ts). */
-  readonly onScoreFeedback?: (feedback: CricketScoreFeedback) => void;
+  /** The general "a dart just landed" feed (whoever threw it): the last dart, the events it
+   * produced, and the log length as the change signal. A board turns these into feedback
+   * (popup/flash) via useDartFeedback — cricket does today; other boards can adopt it. */
+  readonly lastDart?: Dart | null;
+  readonly events?: readonly GameEvent[];
+  readonly dartCount?: number;
 }
 
 /** One shell, eight panels — view(state) returns a discriminated panel, so this is the one place
  * that switches on it. */
-export function Panel({ view, width, height, onLand, onUpgrade, onScoreFeedback }: PanelProps) {
+export function Panel({
+  view,
+  width,
+  height,
+  onLand,
+  onUpgrade,
+  lastDart,
+  events,
+  dartCount,
+}: PanelProps) {
   switch (view.panel.kind) {
     case "x01":
       return <ScoreGrid onLand={onLand} onUpgrade={onUpgrade} view={view} width={width} />;
     case "cricket":
       return (
         <CricketGrid
+          dartCount={dartCount ?? 0}
+          events={events ?? []}
           height={height}
+          lastDart={lastDart ?? null}
           onLand={onLand}
-          onScoreFeedback={onScoreFeedback}
           onUpgrade={onUpgrade}
           view={view}
           width={width}

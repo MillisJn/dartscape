@@ -1,39 +1,35 @@
 import { BlurMask, Canvas, Circle, Group, Line } from "@shopify/react-native-skia";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { GestureDetector } from "react-native-gesture-handler";
 import { bed, type Dart, INNER_BULL, MISS, OUTER_BULL } from "@/core/board";
-import { CRICKET_TARGETS, type CricketTarget, targetOf } from "@/core/game/cricket";
+import { CRICKET_TARGETS } from "@/core/game/cricket";
 import { blendHex, PALETTE } from "@/ui/theme/palette";
 import type { Multiplier } from "../shared/dartGesture";
 import { useCellAnimations } from "../shared/useCellAnimations";
 import { useDartGesture } from "../shared/useDartGesture";
-import { type CricketGridLayout, cricketCellId, TOTAL_ROWS } from "./cricketLayout";
+import { type CricketGridLayout, TOTAL_ROWS } from "./cricketLayout";
 import { cricketMarkerPaths } from "./cricketMarks";
-import { type CricketScoreFeedback, cricketScoreFeedback } from "./scoreFeedback";
 
 export interface CricketCellCanvasProps {
   /** Marks per row, CRICKET_TARGETS order (0-6) — length 7. */
   readonly marks: readonly number[];
-  /** Closed by everyone, per row — length 7. */
-  readonly dead: readonly boolean[];
-  /** Only the throwing seat's column is gesture-enabled — every other column is
-   * structurally untappable (hitTest/hitTestAction return null below), not just dim. */
+  /** Only the throwing seat's (human) column is gesture-enabled — every other column is
+   * structurally untappable (hitTest returns null below), not just dim. */
   readonly active: boolean;
   readonly layout: CricketGridLayout;
   readonly onLand?: (dart: Dart) => void;
   readonly onUpgrade?: (dart: Dart) => void;
-  /** Fired right after onLand/onUpgrade with the row + feedback text/color the caller
-   * needs to position a floating popup and play a sound — see CricketGrid. */
-  readonly onScored?: (row: number, dart: Dart, feedback: CricketScoreFeedback) => void;
+  /** The hit-flash to play on this column, or null. Driven by the shared dart feed (CricketGrid),
+   * so a bot's dart flashes its cell exactly like a human's. `seq` re-triggers it per dart. */
+  readonly flash?: { readonly row: number; readonly color: string; readonly seq: number } | null;
 }
 
 const MARKER_RADIUS_FACTOR = 0.32;
 const STROKE_FACTOR = 1 / 12;
-/** The empty-cell dash is drawn thicker than the tally strokes — a chunkier bar reads better
- * as "nothing here yet" than a thin line (the original drew it as a filled rect, not a stroke). */
-const EMPTY_DASH_STROKE_FACTOR = 1.7;
-/** Marks are capped at 3 (closed) on the view's row data — see CricketRow in view.ts. */
-const CLOSED_MARKS = 3;
+/** The empty-cell dash is drawn a bit thicker than the tally strokes — a chunkier bar reads
+ * better as "nothing here yet" than a thin line (the original drew it as a filled rect). Its
+ * blurred shadow stays at the normal stroke, so a thick bar doesn't cast a heavy black band. */
+const EMPTY_DASH_STROKE_FACTOR = 1.4;
 
 function targetToDart(row: number, multiplier: Multiplier): Dart {
   const target = CRICKET_TARGETS[row];
@@ -48,12 +44,11 @@ function targetToDart(row: number, multiplier: Multiplier): Dart {
  * ScoreButton touch listener gated by isActive(). */
 export function CricketCellCanvas({
   marks,
-  dead,
   active,
   layout,
   onLand,
   onUpgrade,
-  onScored,
+  flash,
 }: CricketCellCanvasProps) {
   const animations = useCellAnimations();
   const { cellWidth: width, cellHeight } = layout;
@@ -71,19 +66,13 @@ export function CricketCellCanvas({
     [cellHeight, height],
   );
 
-  const handleScore = useCallback(
-    (dart: Dart) => {
-      // Every dart reaching here was built by our own targetToDart(row, multiplier)
-      // closure above, so it always resolves back to a valid CRICKET_TARGETS row.
-      const row = cricketCellId(targetOf(dart) as CricketTarget);
-      const wasDead = dead[row] ?? false;
-      const wasClosedByThrower = (marks[row] ?? 0) >= CLOSED_MARKS;
-      const feedback = cricketScoreFeedback(dart, wasDead, wasClosedByThrower);
-      animations.hitFlash(row, feedback.color);
-      onScored?.(row, dart, feedback);
-    },
-    [animations, dead, marks, onScored],
-  );
+  // The colored hit-flash is driven by the shared dart feed (any dart, any thrower) rather than
+  // the tap itself: `flash` gets a fresh object once per dart landing on this column, so this
+  // fires exactly once per dart (its `seq` also guarantees a distinct identity even for repeats).
+  const { hitFlash } = animations;
+  useEffect(() => {
+    if (flash) hitFlash(flash.row, flash.color);
+  }, [flash, hitFlash]);
 
   const gesture = useDartGesture({
     hitTest: (point) => {
@@ -94,16 +83,11 @@ export function CricketCellCanvas({
     },
     // Cricket has no in-sheet action cell — a miss is the bottom bar's MISS button now.
     hitTestAction: () => null,
-    onLand: (dart) => {
-      handleScore(dart);
-      onLand?.(dart);
-    },
-    onUpgrade: (dart) => {
-      handleScore(dart);
-      onUpgrade?.(dart);
-    },
-    onPressStart: (cellId) => animations.lightUp(cellId),
-    onPressEnd: (cellId) => animations.lightDown(cellId),
+    onLand: (dart) => onLand?.(dart),
+    onUpgrade: (dart) => onUpgrade?.(dart),
+    // The whole white glow fires on touch-down and completes on its own, so a quick tap still
+    // plays the full up-and-down before the colored hit-flash — no release-tied light-down.
+    onPressStart: (cellId) => animations.pulse(cellId),
   });
 
   // Every column draws at full brightness — the active seat is shown by a lit highlight box
@@ -142,7 +126,7 @@ export function CricketCellCanvas({
                     p1={{ x: geometry.dash.x1, y: geometry.dash.y1 }}
                     p2={{ x: geometry.dash.x2, y: geometry.dash.y2 }}
                     strokeCap="round"
-                    strokeWidth={dashStroke}
+                    strokeWidth={strokeWidth}
                   />
                 ) : null}
                 {geometry.diagonal1 ? (
