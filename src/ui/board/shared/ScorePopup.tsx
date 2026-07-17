@@ -1,5 +1,13 @@
+import {
+  BlurMask,
+  Canvas,
+  Group,
+  matchFont,
+  Paint,
+  Text as SkiaText,
+} from "@shopify/react-native-skia";
 import { useTheme } from "@spatch-kit/theme/provider";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
 import { PALETTE } from "@/ui/theme/palette";
@@ -36,45 +44,78 @@ function ScorePopupItem({ popup }: { popup: ScorePopupEntry }) {
     // preference itself changes, not on every popup id (each item mounts once).
   }, [motionEnabled, opacity, rise]);
 
-  const translateY = rise.interpolate({ inputRange: [0, 1], outputRange: [0, popup.rect.height] });
+  const { rect } = popup;
+  const translateY = rise.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, rect.height],
+  });
+
+  // Drawn with Skia so the text can carry a real STROKE outline (a dark stroke pass under the
+  // colored fill, plus a soft blurred shadow) — the OG's outlineText look, which plain RN Text
+  // can't do. The RN Animated.View around it still owns the rise/fade (native driver); the Skia
+  // canvas just paints the static glyph.
+  const fontSize = rect.height * 0.5;
+  // Heaviest weight the fallback face has — the popup number should read as thick/bold.
+  const font = useMemo(
+    () =>
+      matchFont({
+        fontFamily: theme.fonts.sansBold,
+        fontSize,
+        fontWeight: "900",
+      }),
+    [theme.fonts.sansBold, fontSize],
+  );
+  const textWidth = font.measureText(popup.text).width;
+
+  const outlineStroke = Math.max(2, fontSize * 0.09);
+  const shadowBlur = Math.max(2, fontSize * 0.14);
+  const padX = fontSize;
+  const padY = fontSize * 0.5;
+  const canvasWidth = rect.width + padX;
+  const canvasHeight = rect.height + padY;
+  const tx = (canvasWidth - textWidth) / 2;
+  const ty = canvasHeight / 2 + fontSize / 3;
 
   return (
     <Animated.View
       pointerEvents="none"
       style={{
-        position: "absolute",
-        left: popup.rect.x,
-        top: popup.rect.y - popup.rect.height,
-        width: popup.rect.width,
-        height: popup.rect.height,
-        alignItems: "center",
-        justifyContent: "center",
+        height: canvasHeight,
+        left: rect.x - padX / 2,
         opacity,
+        position: "absolute",
+        top: rect.y - rect.height - padY / 2,
         transform: [{ translateY }],
+        width: canvasWidth,
       }}
     >
-      <Animated.Text
-        numberOfLines={1}
-        style={{
-          color: popup.color,
-          fontSize: popup.rect.height * 0.5,
-          fontWeight: "800",
-          textShadowColor: PALETTE.textShadow,
-          textShadowOffset: { width: 0, height: 1 },
-          textShadowRadius: 3,
-        }}
-      >
-        {popup.text}
-      </Animated.Text>
+      <Canvas style={{ width: canvasWidth, height: canvasHeight }}>
+        {/* 1. Blurred dark shadow behind — ONLY this layer is blurred (BlurMask is scoped to this
+            Group), so the glyph itself stays crisp. */}
+        <Group>
+          <BlurMask blur={shadowBlur} style="normal" />
+          <SkiaText color={PALETTE.textShadow} font={font} text={popup.text} x={tx} y={ty} />
+        </Group>
+        {/* 2. Crisp black outline (a stroke pass, no blur). */}
+        <SkiaText font={font} text={popup.text} x={tx} y={ty}>
+          <Paint
+            color={PALETTE.textShadow}
+            strokeJoin="round"
+            strokeWidth={outlineStroke}
+            style="stroke"
+          />
+        </SkiaText>
+        {/* 3. Colored fill on top. */}
+        <SkiaText color={popup.color} font={font} text={popup.text} x={tx} y={ty} />
+      </Canvas>
     </Animated.View>
   );
 }
 
 export function ScorePopupLayer({ popups }: { popups: readonly ScorePopupEntry[] }) {
   return (
-    // High zIndex + Android elevation so a popup rising off the top row draws ON TOP of
-    // the score strip above it, never behind — see GameScreen (cricket is unscrolled so
-    // nothing clips the overflow).
+    // High zIndex + Android elevation so a popup rising off the top row draws ON TOP of the score
+    // strip above it, never behind — see GameScreen (cricket is unscrolled so nothing clips it).
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: 100, elevation: 100 }]}>
       {popups.map((popup) => (
         <ScorePopupItem key={popup.id} popup={popup} />

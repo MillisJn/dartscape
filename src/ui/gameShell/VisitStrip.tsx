@@ -1,9 +1,29 @@
 import { Text, View } from "react-native";
-import { type Dart, isMiss, label, points } from "@/core/board";
+import { type Dart, isMiss, points } from "@/core/board";
 import { PALETTE } from "@/ui/theme/palette";
 
 export interface VisitStripProps {
   readonly darts: readonly Dart[];
+}
+
+/** Dart notation with the multiplier always spelled out — S20 / D20 / T20 (never a bare "20",
+ * which reads like a point value). Points belong in the popups, not here. Bull keeps its
+ * conventional 25 (outer) / BULL (inner). */
+function visitLabel(dart: Dart): string {
+  switch (dart.ring) {
+    case "miss":
+      return "-";
+    case "outerBull":
+      return "25";
+    case "innerBull":
+      return "BULL";
+    case "single":
+      return `S${dart.wedge}`;
+    case "double":
+      return `D${dart.wedge}`;
+    case "treble":
+      return `T${dart.wedge}`;
+  }
 }
 
 function chipColor(dart: Dart): string {
@@ -52,7 +72,7 @@ export function VisitStrip({ darts }: VisitStripProps) {
             }}
           >
             <Text numberOfLines={1} style={{ color, fontSize: 26, fontWeight: "800" }}>
-              {dart ? label(dart) : "·"}
+              {dart ? visitLabel(dart) : "·"}
             </Text>
           </View>
         );
