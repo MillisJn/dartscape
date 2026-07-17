@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   HIT_FLASH_MS,
   hitFlashRatioAt,
+  LIGHT_PULSE_MS,
   LIGHT_UP_MS,
   LIGHT_UP_PEAK,
+  lightPulseRatioAt,
   lightUpRatioAt,
 } from "./cellAnimation";
 
@@ -23,6 +25,31 @@ describe("lightUpRatioAt", () => {
   it("can animate back down", () => {
     expect(lightUpRatioAt(0, LIGHT_UP_PEAK, 0)).toBeCloseTo(LIGHT_UP_PEAK);
     expect(lightUpRatioAt(LIGHT_UP_MS, LIGHT_UP_PEAK, 0)).toBeCloseTo(0);
+  });
+});
+
+describe("lightPulseRatioAt", () => {
+  it("starts and ends at 0", () => {
+    expect(lightPulseRatioAt(0)).toBe(0);
+    expect(lightPulseRatioAt(LIGHT_PULSE_MS)).toBe(0);
+  });
+
+  it("peaks at LIGHT_UP_PEAK at the midpoint", () => {
+    expect(lightPulseRatioAt(LIGHT_PULSE_MS / 2)).toBeCloseTo(LIGHT_UP_PEAK);
+  });
+
+  it("is up on the way in and back down on the way out (a full pulse)", () => {
+    const rising = lightPulseRatioAt(LIGHT_UP_MS / 2);
+    const falling = lightPulseRatioAt(LIGHT_UP_MS + LIGHT_UP_MS / 2);
+    expect(rising).toBeGreaterThan(0);
+    expect(falling).toBeGreaterThan(0);
+    expect(rising).toBeLessThan(LIGHT_UP_PEAK);
+    expect(falling).toBeLessThan(LIGHT_UP_PEAK);
+  });
+
+  it("is 0 outside the pulse window", () => {
+    expect(lightPulseRatioAt(-10)).toBe(0);
+    expect(lightPulseRatioAt(LIGHT_PULSE_MS + 100)).toBe(0);
   });
 });
 

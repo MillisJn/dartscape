@@ -4,8 +4,10 @@ import { useCallback, useEffect, useReducer, useRef } from "react";
 import {
   HIT_FLASH_MS,
   hitFlashRatioAt,
+  LIGHT_PULSE_MS,
   LIGHT_UP_MS,
   LIGHT_UP_PEAK,
+  lightPulseRatioAt,
   lightUpRatioAt,
 } from "./cellAnimation";
 
@@ -18,7 +20,7 @@ import {
  * something that can be literally unrolled into fixed hook calls.
  */
 
-type AnimationKind = "lightUp" | "lightDown" | "hitFlash";
+type AnimationKind = "lightUp" | "lightDown" | "hitFlash" | "lightPulse";
 
 interface RunningAnimation {
   readonly kind: AnimationKind;
@@ -35,6 +37,9 @@ export interface CellAnimations {
   /** Refuses to start while a hit-flash is running on this row — mirrors the original. */
   lightUp(row: number): void;
   lightDown(row: number): void;
+  /** A self-contained white up-then-down glow fired on touch-down. Unlike lightUp/lightDown it
+   * isn't tied to the release, so even a quick tap plays the whole pulse. */
+  pulse(row: number): void;
   /** Cancels any running light-up on this row first — mirrors the original. */
   hitFlash(row: number, color: string): void;
 }
@@ -74,6 +79,17 @@ export function useCellAnimations(): CellAnimations {
         continue;
       }
 
+      if (running.kind === "lightPulse") {
+        if (elapsed >= LIGHT_PULSE_MS) {
+          ratiosRef.current.set(row, 0);
+          runningRef.current.delete(row);
+          continue;
+        }
+        ratiosRef.current.set(row, lightPulseRatioAt(elapsed));
+        anyRunning = true;
+        continue;
+      }
+
       const to = running.kind === "lightUp" ? LIGHT_UP_PEAK : 0;
       if (elapsed >= LIGHT_UP_MS) {
         ratiosRef.current.set(row, to);
@@ -104,14 +120,15 @@ export function useCellAnimations(): CellAnimations {
         return;
       }
 
-      // A hit-flash always starts fresh from 0, matching the original's
+      // A hit-flash and a pulse always start fresh from 0, matching the original's
       // setBlendRatio(0) before animating — a light-up/light-down continues from
       // wherever the ratio currently sits (e.g. re-entering bounds mid-drag).
-      if (kind === "hitFlash") ratiosRef.current.set(row, 0);
+      const fresh = kind === "hitFlash" || kind === "lightPulse";
+      if (fresh) ratiosRef.current.set(row, 0);
       runningRef.current.set(row, {
         kind,
         startedAt: Date.now(),
-        from: kind === "hitFlash" ? 0 : from,
+        from: fresh ? 0 : from,
       });
       ensureLoop();
     },
@@ -134,6 +151,12 @@ export function useCellAnimations(): CellAnimations {
     [start],
   );
 
+  // Always starts (a press should never go unacknowledged) — the self-contained white pulse.
+  const pulse = useCallback(
+    (row: number) => start(row, "lightPulse", DEFAULT_BLEND_COLOR),
+    [start],
+  );
+
   const hitFlash = useCallback(
     (row: number, color: string) => start(row, "hitFlash", color),
     [start],
@@ -147,5 +170,5 @@ export function useCellAnimations(): CellAnimations {
     [],
   );
 
-  return { ratioOf, blendColorOf, lightUp, lightDown, hitFlash };
+  return { ratioOf, blendColorOf, lightUp, lightDown, pulse, hitFlash };
 }
