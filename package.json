@@ -63,6 +63,7 @@
     "check": "npm run typecheck && npm run lint && npm test",
     "bundle": "expo export --platform android --output-dir .expo-export",
     "apk": "expo prebuild --platform android && cd android && ./gradlew assembleDebug",
+    "android:release": "node scripts/androidRelease.mjs",
     "verify": "npm run check && npm run bundle"
   },
   "private": true
