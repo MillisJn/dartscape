@@ -50,6 +50,7 @@
     }
   },
   "scripts": {
+    "postinstall": "node ../spatch-kit/scripts/linkInto.mjs",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
